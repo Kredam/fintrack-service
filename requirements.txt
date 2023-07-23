@@ -1,0 +1,7 @@
+Django==4.2.3
+djangorestframework
+django-filter 
+djangorestframework-simplejwt
+django-cors-headers
+factory_boy
+pyyaml uritemplate
