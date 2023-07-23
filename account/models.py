@@ -1,17 +1,34 @@
-from django.db import models
+from django.db.models import CASCADE, Q, TextChoices, UniqueConstraint, Model, ForeignKey, DateField, CharField, PositiveIntegerField, BigIntegerField
 from django.conf import settings
+from django.core.exceptions import ValidationError
+import calendar
 
 # Create your models here.
-class Account(models.Model):
-   
-    class Types(models.TextChoices):
-        CASH = 'CASH', 'Cash'
-        CREDIT_CARD = 'CCARD', 'Credit card'
-        DEBIT_CARD = 'DCARD', 'Debit card'
+class Account(Model):
 
-    expire = models.DateField(null=True)
-    type = models.CharField(choices=Types.choices, null=False)
-    number = models.BigIntegerField(null=True, max_length=19)
-    balance = models.BigIntegerField(null=False, blank=False, default=0)
-    description = models.CharField(null=False, blank=True)
-    holder = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    class Types(TextChoices):
+        CASH = 'CSH', 'Cash'
+        CREDIT_CARD = 'CRD', 'Card'
+
+    expire = DateField(null=True)
+    type = CharField(choices=Types.choices, null=False, max_length=4)
+    number = PositiveIntegerField(null=True, max_length=19)
+    balance = BigIntegerField(null=False, blank=False, default=0)
+    description = CharField(null=False, blank=True, max_length=100)
+    holder = ForeignKey(settings.AUTH_USER_MODEL, on_delete=CASCADE)
+
+    class Meta:
+        constraints = [
+            UniqueConstraint(
+                condition=Q(type='CRD'),
+                fields=['number', 'holder'],
+                name='unique-card'
+            )
+        ]
+
+    def clean(self) -> None:
+        if len(self.number) is 0 and self.type == 'CRD':
+            raise ValidationError({"number": _("Cards must have a number")}, code="required")
+        if len(self.number) > 0 and self.type == 'CSH':
+            raise ValidationError({"number": _("Cash type has no accont number")}, code="invalid")
+        return super().clean()
