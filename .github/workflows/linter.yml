@@ -4,11 +4,11 @@ name: Lint Code Base
 on:
     push:
         branches: [main, develop]
-        branches-ignore: 
-            - feat/**
-            - feature/**
-            - fix/**
-            - bugfix/**
+        # branches-ignore: 
+        #     - feat/**
+        #     - feature/**
+        #     - fix/**
+        #     - bugfix/**
     pull_request:
         branches: [main, develop]
 
