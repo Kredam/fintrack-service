@@ -27,8 +27,8 @@ class Account(Model):
         ]
 
     def clean(self) -> None:
-        if len(self.number) is 0 and self.type == 'CRD':
-            raise ValidationError({"number": _("Cards must have a number")}, code="required")
-        if len(self.number) > 0 and self.type == 'CSH':
-            raise ValidationError({"number": _("Cash type has no accont number")}, code="invalid")
+        if hasattr(self, "number") is False and self.type == 'CRD':
+            raise ValidationError({"number": "Cards must have a number"}, code="required")
+        if hasattr(self, "number") and self.type == 'CSH':
+            raise ValidationError({"number": "Cash type has no account number"}, code="invalid")
         return super().clean()
