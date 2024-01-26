@@ -1,0 +1,12 @@
+from django.db import models
+from expense.models import Expense
+from income.models import Income
+# Create your models here.
+
+    
+class Transactions(models.Model):
+    expense = models.ForeignKey(Expense, on_delete=models.SET_NULL, null=True)
+    income = models.ForeignKey(Income, on_delete=models.SET_NULL, null=True)
+    name = models.CharField(null=False, blank=True)
+    amount = models.PositiveIntegerField(null=False, blank=False)
+    date = models.DateField(null=True, blank=False)
