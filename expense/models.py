@@ -1,5 +1,4 @@
 from django.db import models
-from django.conf import settings
 from django.core.exceptions import ValidationError
 
 # Create your models here.
@@ -22,12 +21,15 @@ class Expense(models.Model):
         OTHER = 'OTHR', 'Other'
 
     type = models.CharField(choices=ExpenseType.choices, max_length=6, default=ExpenseType.OTHER)
-    account = models.ForeignKey('account.Account', on_delete=models.SET_NULL, null=True)
     carvable = models.BooleanField(null=False, blank=False, default=False)
     amount = models.PositiveIntegerField(null=False, blank=False, default=0)
-    period_start = models.DateField(null=True, blank=False)
-    period_end = models.DateField(null=True, blank=False)
+    period_start = models.DateField(null=True, blank=True)
+    period_end = models.DateField(null=True, blank=True)
+    description = models.CharField(null=False, blank=True, max_length=100)
     recurrence_type = models.CharField(choices=RecurrenceTypes.choices, default=RecurrenceTypes.MONTHLY)
 
     def clean(self) -> None:
+        print(self.period_end)
+        if hasattr(self, 'period_end') and hasattr(self, 'period_start') and self.period_end is not None and self.period_start is not None and self.period_end < self.period_start:
+            raise ValidationError({"period_end": "End must be later than start"}, code="invalid")
         return super().clean()
