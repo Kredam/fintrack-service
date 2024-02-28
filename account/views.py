@@ -12,27 +12,34 @@ from account.serializers import AccountSerializer
 # Create your views here.
 @api_view(['GET', 'POST', 'DELETE', 'PATCH'])
 @schema(AutoSchema)
-@permission_classes([IsAuthenticated])
-def account_view(request: Request) -> Response:
+# @permission_classes([IsAuthenticated])
+def account_view(request: Request, pk=None) -> Response:
     if request.method == 'GET':
+        if pk:
+            return retrieve(request, pk)
         return list_accounts(request)
     if request.method == 'POST':
         return add_account(request)
     if request.POST.get('holder') == request.user.pk:
         if request.method == 'DELETE':
-            return delete_account(request)
+            return delete_account(request, pk)
         if request.method == 'PATCH':
             return modify_account(request)
     else:
         return Response('You are not the holder of the card', status=HTTP_403_FORBIDDEN)
 
+def retrieve(request: Request, pk):
+    queryset = Account.objects.get(pk=pk)
+    serialized = AccountSerializer(queryset, many=False)
+    return Response(serialized.data, status=HTTP_200_OK)
+
 def list_accounts(request: Request) -> Response:
     user = request.user.pk
-    offset = request.data['offset']
-    limit = request.data['limit']
+    offset = int(request.query_params.get('offset'))
+    limit = int(request.query_params.get('limit'))
+    # accounts = Account.objects.all()[offset:offset+limit]
     accounts = Account.objects.filter(holder=user)[offset:offset+limit]
-    serialized = AccountSerializer(data=accounts, many=True)
-    serialized.is_valid(raise_exception=True)
+    serialized = AccountSerializer(accounts, many=True)
     return Response(serialized.data, status=HTTP_200_OK)
 
 def add_account(request: Request) -> Response:
@@ -47,7 +54,7 @@ def add_account(request: Request) -> Response:
     serialized.is_valid(raise_exception=True)
     return Response(data=serialized.data, status=HTTP_201_CREATED)
 
-def delete_account(request: Request) -> Response:
+def delete_account(request: Request, pk) -> Response:
     pk = request.data['id']
     account = Account.objects.get(pk=pk)
     serialized = AccountSerializer(data=account, many=False)
